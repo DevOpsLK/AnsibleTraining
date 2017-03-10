@@ -17,8 +17,11 @@ vagrant up
 ```
 
 workstation : controller (ansible installed)
+
 servera : controlled by ansible
+
 serverb : controlled by ansible
+
 
 devops user has ability to do privilage escalation without prompting for password.
 In workstation switch to student user, when you are logged in you will be in as vagrant user.
