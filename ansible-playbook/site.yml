@@ -43,27 +43,3 @@
      notify:
        - restart apache2
 
-- hosts: db
-  serial: 1
-  remote_user: ubuntu
-  sudo: yes
-  vars_files:
-    - var.yml
-  tasks:
-   - name: update apt repo
-     apt:  update_cache=yes
-
-   - name: install packages
-     apt: name={{ item }} state=present
-     with_items:
-      - mysql-server
-      - htop
-      - python-mysqldb
-
-   - name: service mysql  
-     action: service name=mysql state=started
-
-   - name: wait for mysql start
-     wait_for:
-      - port: 3306
-        delay: 10
