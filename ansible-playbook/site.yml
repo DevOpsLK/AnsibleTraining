@@ -1,0 +1,69 @@
+---
+
+- hosts: app
+  serial: 1
+  remote_user: ubuntu
+  sudo: yes
+  vars_files:
+    - var.yml
+  tasks: 
+   - name: update apt repo
+     apt:  update_cache=yes
+
+   - name: install packages
+     apt: name={{ item }} state=present
+     with_items:
+      - apache2
+      - htop
+      - nmap
+
+   - name: create file from template and copy to remote system 
+     template: src=templates/ports.jinja2 dest=/etc/apache2/ports.conf
+     notify: restart apache2
+  
+
+   - name: enabled mod_rewrite
+     apache2_module: name=rewrite state=present
+     notify:
+      - restart apache2
+
+   - name: create virtual host file
+     template: src=templates/virtualhost.conf dest=/etc/apache2/sites-available/{{ domain }}.conf
+
+   - name: Creates directory
+     file: path=/var/www/{{ domain }} state=directory
+
+   - name : copy html
+     copy: src=files/index.html dest=/var/www/{{ domain }}/index.html
+
+   - name: a2ensite {{ domain }}
+     command: a2ensite {{ domain }}
+     args:
+        creates: /etc/apache2/sites-enabled/{{ domain }}.conf
+     notify:
+       - restart apache2
+
+- hosts: db
+  serial: 1
+  remote_user: ubuntu
+  sudo: yes
+  vars_files:
+    - var.yml
+  tasks:
+   - name: update apt repo
+     apt:  update_cache=yes
+
+   - name: install packages
+     apt: name={{ item }} state=present
+     with_items:
+      - mysql-server
+      - htop
+      - python-mysqldb
+
+   - name: service mysql  
+     action: service name=mysql state=started
+
+   - name: wait for mysql start
+     wait_for:
+      - port: 3306
+        delay: 10
